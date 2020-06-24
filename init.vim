@@ -23,6 +23,9 @@ Plug 'prettier/vim-prettier', { 'do': 'npm install' }
 
 call plug#end()
 
+" True color
+set termguicolors
+
 " Deoplete
 let g:deoplete#enable_at_startup = 1
 set completeopt+=noselect
