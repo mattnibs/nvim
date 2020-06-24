@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/Users/nibs/Code/infra/boom-dev'
+let g:netrw_dirhist_2='/Users/nibs'
+let g:netrw_dirhist_3='/Users/nibs/Code/perf-testing/autoperf'
+let g:netrw_dirhist_4='/Users/nibs/Code/mkzeek/openssl-dir'
