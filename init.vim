@@ -24,10 +24,7 @@ Plug 'prettier/vim-prettier', { 'do': 'npm install' }
 call plug#end()
 
 " Deoplete
-" set completeopt=longest,menuone
 let g:deoplete#enable_at_startup = 1
-" let g:deoplete#enable_smart_case = 1
-" call deoplete#custom#option('omni_patterns', { 'go': '[^. *\t]\.\w*' })
 set completeopt+=noselect
 call deoplete#custom#option({
 \ 'omni_patterns': { 'go': '[^. *\t]\.\w*' },
@@ -42,23 +39,12 @@ let g:neomake_warning_sign = {'text': '⚠', 'texthl': 'NeomakeWarningSign'}
 let g:neomake_message_sign = {'text': '➤', 'texthl': 'NeomakeMessageSign'}
 let g:neomake_info_sign    = {'text': 'ℹ', 'texthl': 'NeomakeInfoSign'}
 call neomake#configure#automake('w')
-" let g:neomake_logfile = '/tmp/neomake.log'
-" let g:neomake_open_list = 2
-"
+
 " Prettier
 autocmd BufWritePre *.js PrettierAsync
 
-" Ale
-" let g:ale_sign_error = '⤫'
-" let g:ale_sign_warning = '⚠'
-
 " Airline
 let g:airline#extensions#tabline#enabled = 1
-" let g:airline#extensions#ale#enabled = 1
-
-" call deoplete#custom#option('sources', {
-" \ '_': ['ale'],
-" \})
 
 " Display
 set number
@@ -75,11 +61,6 @@ set expandtab
 
 " language specific syntax highlighting
 let g:javascript_plugin_flow = 1
-" let g:javascript_plugin_jsdoc = 1
-
-" highlight extra whitespace
-" highlight ExtraWhitespace ctermbg=darkgreen guibg=darkgreen
-" match ExtraWhitespace /\s\+$\|\t/
 
 " splits
 set splitbelow
@@ -101,7 +82,6 @@ let g:go_highlight_methods = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_structs = 1
 let g:go_highlight_types = 1
-" let g:go_list_type = "quickfix"
 let g:go_fmt_command = "goimports"
 let g:go_def_mapping_enabled = 1
 let g:go_rename_command = 'gopls'
@@ -110,28 +90,6 @@ let g:go_term_enabled = 1
 
 " neomake configuration for Go.
 let g:neomake_go_enabled_makers = ['go', 'golangci_lint', 'golint']
-" let g:neomake_go_gometalinter_maker = {
-  " \ 'args': [
-  " \   '--tests',
-  " \   '--enable-gc',
-  " \   '--concurrency=3',
-  " \   '--fast',
-  " \   '-D', 'aligncheck',
-  " \   '-D', 'dupl',
-  " \   '-D', 'gocyclo',
-  " \   '-D', 'gotype',
-  " \   '-E', 'errcheck',
-  " \   '-E', 'misspell',
-  " \   '-E', 'unused',
-  " \   '%:p:h',
-  " \ ],
-  " \ 'append_file': 0,
-  " \ 'errorformat':
-  " \   '%E%f:%l:%c:%trror: %m,' .
-  " \   '%W%f:%l:%c:%tarning: %m,' .
-  " \   '%E%f:%l::%trror: %m,' .
-  " \   '%W%f:%l::%tarning: %m'
-  " \ }
 
 " neomake configuration for javascript
 let g:neomake_javascript_enabled_makers=['eslint', 'flow']
