@@ -23,9 +23,6 @@ Plug 'prettier/vim-prettier', { 'do': 'npm install' }
 
 call plug#end()
 
-" True color
-set termguicolors
-
 " Deoplete
 let g:deoplete#enable_at_startup = 1
 set completeopt+=noselect
@@ -36,12 +33,12 @@ call deoplete#custom#option({
 \ })
 
 " Neomake
- " autocmd BufWritePost,BufEnter * Neomake
+" let g:neomake_open_list    = 0
 let g:neomake_error_sign   = {'text': '✖', 'texthl': 'NeomakeErrorSign'}
 let g:neomake_warning_sign = {'text': '⚠', 'texthl': 'NeomakeWarningSign'}
 let g:neomake_message_sign = {'text': '➤', 'texthl': 'NeomakeMessageSign'}
 let g:neomake_info_sign    = {'text': 'ℹ', 'texthl': 'NeomakeInfoSign'}
-call neomake#configure#automake('w')
+call neomake#configure#automake('rw')
 
 " Prettier
 autocmd BufWritePre *.js PrettierAsync
@@ -55,6 +52,7 @@ set showcmd
 set cursorline
 colorscheme monokai-phoenix
 set colorcolumn=80
+set termguicolors " true colors
 
 " Indent shenanigans
 filetype plugin indent on
@@ -98,7 +96,6 @@ let g:neomake_go_enabled_makers = ['go', 'golangci_lint', 'golint']
 let g:neomake_javascript_enabled_makers=['eslint', 'flow']
 let g:neomake_javascript_eslint_exe = $PWD .'/node_modules/.bin/eslint'
 let g:neomake_javascript_flow_exe = $PWD .'/node_modules/.bin/flow'
-" autocmd! BufWritePost * Neomake
 
 " filetypes
 " yams
