@@ -76,7 +76,7 @@ set splitright
 
 " NerdTree
 let NERDTreeShowHidden=1
-let g:NERDTreeShowIgnoredStatus=1
+let g:NERDTreeGitStatusShowIgnored=1
 
 " NerdCommenter
 let g:NERDSpaceDelims = 1
@@ -91,22 +91,26 @@ let g:go_highlight_operators = 1
 let g:go_highlight_structs = 1
 let g:go_highlight_types = 1
 let g:go_list_type = "quickfix"
-let g:go_fmt_command = "goimports"
 let g:go_def_mapping_enabled = 1
+let g:go_fmt_command = "goimports"
 let g:go_rename_command = 'gopls'
 let g:go_fmt_failed_silently = 1
 let g:go_term_enabled = 1
+let g:go_fmt_autosave = 1
+let g:go_mod_fmt_autosave = 0
+let g:go_metalinter_autosave = 0
 
 " metalinter config
-let g:go_metalinter_command = ""
+" let g:go_metalinter_command = "golangci-lint"
+" let g:go_metalinter_enabled = ['vet', 'golint']
 
 " neomake configuration for Go.
-let g:neomake_go_enabled_makers = ['go', 'golangci_lint', 'golint']
+" let g:neomake_go_enabled_makers = ['go', 'custom']
 
 " neomake configuration for javascript
-let g:neomake_javascript_enabled_makers=['eslint', 'flow']
-let g:neomake_javascript_eslint_exe = $PWD .'/node_modules/.bin/eslint'
-let g:neomake_javascript_flow_exe = $PWD .'/node_modules/.bin/flow'
+" let g:neomake_javascript_enabled_makers=['eslint', 'flow']
+" let g:neomake_javascript_eslint_exe = $PWD .'/node_modules/.bin/eslint'
+" let g:neomake_javascript_flow_exe = $PWD .'/node_modules/.bin/flow'
 
 " pencil config
 let g:pencil#textwidth = 80
