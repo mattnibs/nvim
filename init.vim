@@ -20,7 +20,10 @@ Plug 'janko-m/vim-test'
 Plug 'mephux/bro.vim'
 Plug 'SirVer/ultisnips'
 Plug 'prettier/vim-prettier', { 'do': 'npm install' }
-
+Plug 'reedes/vim-pencil'
+Plug 'dhruvasagar/vim-table-mode'
+Plug 'leafgarland/typescript-vim'
+                                
 call plug#end()
 
 " Deoplete
@@ -52,7 +55,11 @@ set showcmd
 set cursorline
 colorscheme monokai-phoenix
 set colorcolumn=80
-set termguicolors " true colors
+
+" Colors
+if (has("termguicolors"))
+  set termguicolors
+endif
 
 " Indent shenanigans
 filetype plugin indent on
@@ -83,11 +90,15 @@ let g:go_highlight_methods = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_structs = 1
 let g:go_highlight_types = 1
+let g:go_list_type = "quickfix"
 let g:go_fmt_command = "goimports"
 let g:go_def_mapping_enabled = 1
 let g:go_rename_command = 'gopls'
 let g:go_fmt_failed_silently = 1
 let g:go_term_enabled = 1
+
+" metalinter config
+let g:go_metalinter_command = ""
 
 " neomake configuration for Go.
 let g:neomake_go_enabled_makers = ['go', 'golangci_lint', 'golint']
@@ -96,6 +107,14 @@ let g:neomake_go_enabled_makers = ['go', 'golangci_lint', 'golint']
 let g:neomake_javascript_enabled_makers=['eslint', 'flow']
 let g:neomake_javascript_eslint_exe = $PWD .'/node_modules/.bin/eslint'
 let g:neomake_javascript_flow_exe = $PWD .'/node_modules/.bin/flow'
+
+" pencil config
+let g:pencil#textwidth = 80
+augroup pencil
+  autocmd!
+  autocmd FileType gitcommit call pencil#init({ 'wrap': 'hard', 'autoformat': 1, 'textwidth': 72 })
+  autocmd FileType markdown,mkd call pencil#init({ 'wrap': 'hard', 'autoformat': 1, 'textwidth': 80 })
+augroup END
 
 " filetypes
 " yams
@@ -106,6 +125,8 @@ au FileType go set noexpandtab
 au FileType go set shiftwidth=4
 au FileType go set softtabstop=4
 au FileType go set tabstop=4
+" markdown
+
 
 " shortcut modifiers
 let mapleader=","
@@ -143,3 +164,7 @@ au FileType go nmap <leader>gDv <Plug>(go-doc-vertical)
 " cycle through errors
 map <leader>] :lnext<CR>
 map <leader>[ :lprev<CR>
+" autoformat
+nnoremap <silent> Q gwap
+xnoremap <silent> Q gw
+nnoremap <silent> <leader>Q vapJgqap
