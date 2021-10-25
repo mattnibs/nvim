@@ -2,59 +2,47 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'scrooloose/nerdcommenter'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'reewr/vim-monokai-phoenix'
-" Plug 'sickill/vim-monokai'
 Plug 'tomasr/molokai'
 Plug 'chlorm/vim-monokai-truecolor'
 Plug 'joshdick/onedark.vim'
 Plug 'morhetz/gruvbox'
-" Plug 'crusoexia/vim-monokai'
-Plug 'pangloss/vim-javascript'
-Plug 'mxw/vim-jsx'
 Plug 'vim-scripts/bufkill.vim'
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'Shougo/deoplete-lsp'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'airblade/vim-gitgutter'
-" Plug 'neomake/neomake'
 Plug 'mephux/bro.vim'
-Plug 'prettier/vim-prettier', { 'do': 'npm install' }
-Plug 'reedes/vim-pencil'
-Plug 'dhruvasagar/vim-table-mode'
-Plug 'leafgarland/typescript-vim'
 Plug 'gf3/peg.vim'
 Plug 'neovim/nvim-lspconfig'
+Plug 'williamboman/nvim-lsp-installer'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'hrsh7th/nvim-compe'
+" Plug '~/Code/treesitter-newline'
                                 
 call plug#end()
 
-" Deoplete
-let g:deoplete#enable_at_startup = 1
-set completeopt+=noselect
-call deoplete#custom#option({
-\ 'omni_patterns': { 'go': '[^. *\t]\.\w*' },
-\ 'auto_complete_delay': 300,
-\ 'auto_refresh_delay': 500,
-\ })
+" Compe
+let g:compe = {}
+let g:compe.enabled = v:true
+let g:compe.autocomplete = v:true
 
-" Neomake
-" let g:neomake_open_list    = 0
-" let g:neomake_error_sign   = {'text': '✖', 'texthl': 'NeomakeErrorSign'}
-" let g:neomake_warning_sign = {'text': '⚠', 'texthl': 'NeomakeWarningSign'}
-" let g:neomake_message_sign = {'text': '➤', 'texthl': 'NeomakeMessageSign'}
-" let g:neomake_info_sign    = {'text': 'ℹ', 'texthl': 'NeomakeInfoSign'}
-" call neomake#configure#automake('rw')
-
-" Prettier
-autocmd BufWritePre *.js PrettierAsync
+let g:compe.source = {}
+let g:compe.source.path = v:true
+let g:compe.source.buffer = v:true
+let g:compe.source.calc = v:true
+let g:compe.source.nvim_lsp = v:true
+let g:compe.source.nvim_lua = v:true
+" let g:compe.source.vsnip = v:true
+" let g:compe.source.ultisnips = v:true
 
 " Airline
 let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
+" let g:airline_section_x = '%{penciltree#status()}'
+
 
 " Display
 set number
@@ -72,7 +60,7 @@ if has('nvim') || has('termguicolors')
 endif
 
 " Indent shenanigans
-filetype plugin indent on
+" filetype plugin indent on
 set tabstop=4
 set shiftwidth=4
 set expandtab
@@ -91,31 +79,93 @@ let g:NERDTreeGitStatusShowIgnored=1
 " NerdCommenter
 let g:NERDSpaceDelims = 1
 
+" GitGutter
+let g:gitgutter_highlight_linenrs = 1
+
 " crazy go lua setup
 lua <<EOF
+  local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
+  parser_config.markdown = {
+    install_info = {
+      url = "/Users/nibs/Code/tree-sitter-markdown",
+      files = {"src/parser.c", "src/scanner.cc"}
+    }
+  }
   require'nvim-treesitter.configs'.setup {
     ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
     highlight = {
       enable = true,              -- false will disable the whole extension
+      disable = {} -- so markdown is not disabled
+    },
+    indent = {
+      enable = false,
+    },
+    newline = {
+      enable = true,
+      disable = {},
     },
   }
-  nvim_lsp = require "lspconfig"
-  nvim_lsp.gopls.setup {
-    cmd = {"gopls", "serve"};
-    root_dir = nvim_lsp.util.root_pattern("go.mod", ".git");
-    settings = {
-      gopls = {
-        analyses = {
-		  assign = true,
-		  atomic = true,
-		  fieldalignment = true,
-		  nonewvars = true,
-          unusedparams = true,
-        },
-        staticcheck = true,
-      },
-    },
-  }
+  local nvim_lsp = require('lspconfig')
+  local on_attach = function(client, bufnr)
+    local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+    local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+  
+    buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+  
+    -- Mappings.
+    local opts = { noremap=true, silent=true }
+    buf_set_keymap('n', 'gD', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+    buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    buf_set_keymap('n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
+    buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+    buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+    buf_set_keymap('n', '<space>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
+    buf_set_keymap('n', '<space>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
+    buf_set_keymap('n', '<space>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
+    buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+    buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+    buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
+    buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
+    buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+    buf_set_keymap('n', '<space>q', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
+    buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+  
+    -- Set some keybinds conditional on server capabilities
+    if client.resolved_capabilities.document_formatting then
+      buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+    elseif client.resolved_capabilities.document_range_formatting then
+      buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.range_formatting()<CR>", opts)
+    end
+  
+    -- Set autocommands conditional on server_capabilities
+    if client.resolved_capabilities.document_highlight then
+      vim.api.nvim_exec([[
+        hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
+        hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
+        hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
+        augroup lsp_document_highlight
+          autocmd! * <buffer>
+          autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+          autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+        augroup END
+      ]], false)
+    end
+  end
+
+  local lsp_installer = require("nvim-lsp-installer")
+  lsp_installer.on_server_ready(function(server)
+    local opts = { on_attach = on_attach }
+    server:setup(opts)
+    vim.cmd [[ do User LspAttachBuffers ]]
+  end)
+
+  -- Use a loop to conveniently both setup defined servers 
+  -- and map buffer local keybindings when the language server attaches
+  -- local servers = { "gopls", "tsserver" }
+  -- for _, lsp in ipairs(servers) do
+  --   nvim_lsp[lsp].setup { on_attach = on_attach }
+  -- end
 
   function goimports(timeoutms)
     local context = { source = { organizeImports = true } }
@@ -139,45 +189,7 @@ lua <<EOF
 EOF
 
 autocmd BufWritePre *.go lua goimports(1000)
-
-" vim-go
-" let g:go_highlight_build_constraints = 1
-" let g:go_highlight_extra_types = 1
-" let g:go_highlight_functions = 1
-" let g:go_highlight_fields = 1
-" let g:go_highlight_methods = 1
-" let g:go_highlight_operators = 1
-" let g:go_highlight_structs = 1
-" let g:go_highlight_types = 1
-" let g:go_list_type = "quickfix"
-" let g:go_def_mapping_enabled = 1
-" let g:go_fmt_command = "goimports"
-" let g:go_rename_command = 'gopls'
-" let g:go_fmt_failed_silently = 1
-" let g:go_term_enabled = 1
-" let g:go_fmt_autosave = 1
-" let g:go_mod_fmt_autosave = 0
-" let g:go_metalinter_autosave = 0
-
-" metalinter config
-" let g:go_metalinter_command = "golangci-lint"
-" let g:go_metalinter_enabled = ['vet', 'golint']
-
-" neomake configuration for Go.
-" let g:neomake_go_enabled_makers = ['go', 'custom']
-
-" neomake configuration for javascript
-" let g:neomake_javascript_enabled_makers=['eslint', 'flow']
-" let g:neomake_javascript_eslint_exe = $PWD .'/node_modules/.bin/eslint'
-" let g:neomake_javascript_flow_exe = $PWD .'/node_modules/.bin/flow'
-
-" pencil config
-let g:pencil#textwidth = 80
-augroup pencil
-  autocmd!
-  autocmd FileType gitcommit call pencil#init({ 'wrap': 'hard', 'autoformat': 1, 'textwidth': 72 })
-  autocmd FileType markdown,mkd call pencil#init({ 'wrap': 'hard', 'autoformat': 1, 'textwidth': 80 })
-augroup END
+autocmd BufWritePre *.js lua vim.lsp.buf.formatting_sync(nil, 1000)
 
 " filetypes
 " yams
@@ -211,12 +223,6 @@ map <C-n> :NERDTreeToggle<CR>
 map <leader>o :Files<CR>
 map <leader>a :Ag<CR>
 map <leader>b :Buffers<CR>
-" vim-test
-" nmap <silent> t<C-n> :TestNearest<CR> " t Ctrl+n
-" nmap <silent> t<C-f> :TestFile<CR>    " t Ctrl+f
-" nmap <silent> t<C-s> :TestSuite<CR>   " t Ctrl+s
-" nmap <silent> t<C-l> :TestLast<CR>    " t Ctrl+l
-" nmap <silent> t<C-g> :TestVisit<CR>   " t Ctrl+g
 " go
 au FileType go nmap <A-r> <cmd>lua vim.lsp.buf.rename()<CR>
 au FileType go nmap <A-n> :cnext<CR>
