@@ -19,24 +19,18 @@ Plug 'gf3/peg.vim'
 Plug 'neovim/nvim-lspconfig'
 Plug 'williamboman/nvim-lsp-installer'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-Plug 'hrsh7th/nvim-compe'
-" Plug '~/Code/treesitter-newline'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-path'
+Plug 'hrsh7th/cmp-cmdline'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'sebdah/vim-delve'
+
+" For luasnip users.
+Plug 'L3MON4D3/LuaSnip'
+Plug 'saadparwaiz1/cmp_luasnip'
                                 
 call plug#end()
-
-" Compe
-let g:compe = {}
-let g:compe.enabled = v:true
-let g:compe.autocomplete = v:true
-
-let g:compe.source = {}
-let g:compe.source.path = v:true
-let g:compe.source.buffer = v:true
-let g:compe.source.calc = v:true
-let g:compe.source.nvim_lsp = v:true
-let g:compe.source.nvim_lua = v:true
-" let g:compe.source.vsnip = v:true
-" let g:compe.source.ultisnips = v:true
 
 " Airline
 let g:airline#extensions#tabline#enabled = 1
@@ -82,30 +76,26 @@ let g:NERDSpaceDelims = 1
 " GitGutter
 let g:gitgutter_highlight_linenrs = 1
 
-" crazy go lua setup
+" settings for nvim-cmp
+set completeopt=menu,menuone,noselect
+
+" crazy lua setup
 lua <<EOF
   local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
-  parser_config.markdown = {
-    install_info = {
-      url = "/Users/nibs/Code/tree-sitter-markdown",
-      files = {"src/parser.c", "src/scanner.cc"}
-    }
-  }
   require'nvim-treesitter.configs'.setup {
-    ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+    ensure_installed = {"go", "c", "swift"},
     highlight = {
       enable = true,              -- false will disable the whole extension
-      disable = {} -- so markdown is not disabled
     },
     indent = {
-      enable = false,
+      enable = true,
     },
     newline = {
       enable = true,
       disable = {},
     },
   }
-  local nvim_lsp = require('lspconfig')
+
   local on_attach = function(client, bufnr)
     local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
     local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
@@ -126,8 +116,8 @@ lua <<EOF
     buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
     buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
     buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
-    buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
-    buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+    buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+    buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
     buf_set_keymap('n', '<space>q', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
     buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
   
@@ -153,42 +143,77 @@ lua <<EOF
     end
   end
 
+  -- nvim-cmp
+  local cmp = require'cmp'
+  -- Global setup.
+  cmp.setup({
+    snippet = {
+	  expand = function(args)
+	    require('luasnip').lsp_expand(args.body)
+      end,
+	},
+    mapping = {
+      ['<C-d>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), { 'i', 'c' }),
+      ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), { 'i', 'c' }),
+      ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), { 'i', 'c' }),
+      ['<C-e>'] = cmp.mapping({
+        i = cmp.mapping.abort(),
+        c = cmp.mapping.close(),
+      }),
+      -- Accept currently selected item. If none selected, `select` first item.
+      -- Set `select` to `false` to only confirm explicitly selected items.
+      ['<CR>'] = cmp.mapping.confirm({ select = true }),
+    },
+    sources = cmp.config.sources({
+      { name = 'nvim_lsp' },
+	  { name = 'luasnip' },
+    }, {
+      { name = 'buffer' },
+    })
+  })
+
+  -- `/` cmdline setup.
+  cmp.setup.cmdline('/', {
+    sources = {
+      { name = 'buffer' }
+    }
+  })
+  -- `:` cmdline setup.
+  cmp.setup.cmdline(':', {
+    sources = cmp.config.sources({
+      { name = 'path' }
+    }, {
+      { name = 'cmdline' }
+    })
+  })
+  -- Setup lspconfig.
+  local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
   local lsp_installer = require("nvim-lsp-installer")
   lsp_installer.on_server_ready(function(server)
-    local opts = { on_attach = on_attach }
+    local opts = { on_attach = on_attach, capabilities = capabilities }
     server:setup(opts)
     vim.cmd [[ do User LspAttachBuffers ]]
   end)
 
-  -- Use a loop to conveniently both setup defined servers 
-  -- and map buffer local keybindings when the language server attaches
-  -- local servers = { "gopls", "tsserver" }
-  -- for _, lsp in ipairs(servers) do
-  --   nvim_lsp[lsp].setup { on_attach = on_attach }
-  -- end
-
-  function goimports(timeoutms)
-    local context = { source = { organizeImports = true } }
-    vim.validate { context = { context, "t", true } }
-
+  function OrgImports(wait_ms)
     local params = vim.lsp.util.make_range_params()
-    params.context = context
-
-    local method = "textDocument/codeAction"
-    local resp = vim.lsp.buf_request_sync(0, method, params, timeoutms)
-    if resp and resp[1] then
-      local result = resp[1].result
-      if result and result[1] then
-        local edit = result[1].edit
-        vim.lsp.util.apply_workspace_edit(edit)
+    params.context = {only = {"source.organizeImports"}}
+    local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, wait_ms)
+    for _, res in pairs(result or {}) do
+      for _, r in pairs(res.result or {}) do
+        if r.edit then
+          vim.lsp.util.apply_workspace_edit(r.edit, "UTF-8")
+        else
+          vim.lsp.buf.execute_command(r.command)
+        end
       end
     end
-
-    vim.lsp.buf.formatting()
-  end
+    vim.lsp.buf.formatting_sync(nil, wait_ms)
+end
 EOF
 
-autocmd BufWritePre *.go lua goimports(1000)
+autocmd BufWritePre *.go lua OrgImports(1000) 
 autocmd BufWritePre *.js lua vim.lsp.buf.formatting_sync(nil, 1000)
 
 " filetypes
