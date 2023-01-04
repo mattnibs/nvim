@@ -6,9 +6,6 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'reewr/vim-monokai-phoenix'
-Plug 'tomasr/molokai'
-Plug 'chlorm/vim-monokai-truecolor'
 Plug 'joshdick/onedark.vim'
 Plug 'morhetz/gruvbox'
 Plug 'vim-scripts/bufkill.vim'
@@ -25,6 +22,8 @@ Plug 'hrsh7th/cmp-path'
 Plug 'hrsh7th/cmp-cmdline'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'sebdah/vim-delve'
+" Plug 'ray-x/starry.nvim'
+Plug 'marko-cerovac/material.nvim'
 
 " For luasnip users.
 Plug 'L3MON4D3/LuaSnip'
@@ -37,13 +36,18 @@ let g:airline#extensions#tabline#enabled = 1
 let g:airline_powerline_fonts = 1
 " let g:airline_section_x = '%{penciltree#status()}'
 
+" starry
+" let starry_contrast = 1
+" let starry_darker_contrast=v:true
+" let starry_deep_black=1
+
 
 " Display
 set number
 set showcmd
 set cursorline
 syntax on
-colorscheme gruvbox
+" colorscheme monokai
 " colorscheme monokai-phoenix
 " colorscheme monokai
 set colorcolumn=80
@@ -58,6 +62,7 @@ endif
 set tabstop=4
 set shiftwidth=4
 set expandtab
+let smartindent=1
 
 " language specific syntax highlighting
 let g:javascript_plugin_flow = 1
@@ -69,6 +74,7 @@ set splitright
 " NerdTree
 let NERDTreeShowHidden=1
 let g:NERDTreeGitStatusShowIgnored=1
+let g:NERDTreeMinimalMenu=1
 
 " NerdCommenter
 let g:NERDSpaceDelims = 1
@@ -81,9 +87,12 @@ set completeopt=menu,menuone,noselect
 
 " crazy lua setup
 lua <<EOF
+  vim.cmd 'colorscheme material'
+  vim.g.material_style = "darker"
   local parser_config = require "nvim-treesitter.parsers".get_parser_configs()
   require'nvim-treesitter.configs'.setup {
     ensure_installed = {"go", "c", "swift"},
+	auto_install = true,
     highlight = {
       enable = true,              -- false will disable the whole extension
     },
@@ -122,14 +131,14 @@ lua <<EOF
     buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
   
     -- Set some keybinds conditional on server capabilities
-    if client.resolved_capabilities.document_formatting then
+    if client.server_capabilities.document_formatting then
       buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
-    elseif client.resolved_capabilities.document_range_formatting then
+    elseif client.server_capabilities.document_range_formatting then
       buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.range_formatting()<CR>", opts)
     end
   
     -- Set autocommands conditional on server_capabilities
-    if client.resolved_capabilities.document_highlight then
+    if client.server_capabilities.document_highlight then
       vim.api.nvim_exec([[
         hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
         hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
@@ -187,7 +196,7 @@ lua <<EOF
     })
   })
   -- Setup lspconfig.
-  local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+  local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
 
   local lsp_installer = require("nvim-lsp-installer")
   lsp_installer.on_server_ready(function(server)
