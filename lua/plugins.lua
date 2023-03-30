@@ -266,6 +266,9 @@ return packer.startup(function(use)
         'numToStr/Comment.nvim',
         config = function()
             require('Comment').setup {
+                toggler = {
+                    line = "<Leader>c",
+                },
                 opleader = {
                     line = "<Leader>c",
                 },
