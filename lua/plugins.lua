@@ -50,7 +50,7 @@ return packer.startup(function(use)
             },
             {
                 "nvim-telescope/telescope-file-browser.nvim",
-                requires = "kyazdani42/nvim-web-devicons",
+                requires = "nvim-tree/nvim-web-devicons",
             },
             { "nvim-telescope/telescope-ui-select.nvim" },
         },
@@ -73,19 +73,69 @@ return packer.startup(function(use)
     }
 
     -- Colorschemes
+    -- use {
+    --     'https://gitlab.com/__tpb/monokai-pro.nvim',
+    --     as = 'monokai-pro.nvim',
+    --     config = function()
+    --         vim.g.monokaipro_filter = "default"
+    --         vim.cmd("colorscheme monokaipro")
+    --     end,
+    -- }
+    -- use {
+    --     "ellisonleao/gruvbox.nvim",
+    --     config = function()
+    --         vim.cmd("colorscheme gruvbox")
+    --     end,
+    -- }
+
     use {
         "marko-cerovac/material.nvim",
         config = function()
             vim.g.material_style = "darker"
-            require("material").setup()
+            require("material").setup({
+                plugins = {
+                    "nvim-cmp",
+                    "nvim-tree",
+                    "gitsigns",
+                    "nvim-web-devicons",
+                    "telescope"
+                },
+            })
+            vim.keymap.set("n", "]t", function()
+                vim.ui.select({
+                    "oceanic",
+                    "deep ocean",
+                    "palenight",
+                    "lighter",
+                    "darker",
+                }, { prompt = "Select Material style" }, function(choice)
+                    vim.g.material_style = choice
+                    vim.cmd "colorscheme material"
+                end)
+            end, opts)
             vim.cmd("colorscheme material")
         end,
+    }
+
+    use {
+        "hrsh7th/nvim-cmp",
+        config = function()
+            require("cmp").setup({
+                sources = {
+                    { name = "nvim_lsp" },
+                },
+            })
+        end,
+        requires = {
+            "hrsh7th/cmp-nvim-lsp",
+        },
     }
 
     -- Language server installer
     use {
         "williamboman/mason.nvim",
         requires = "williamboman/mason-lspconfig.nvim",
+        after = "cmp-nvim-lsp",
         config = function()
             require("mason").setup { ui = { border = vim.g.border_style } }
             require("mason-lspconfig").setup {
@@ -114,7 +164,8 @@ return packer.startup(function(use)
                 map("n", "<Leader>cwr", vim.lsp.buf.remove_workspace_folder, bufopts)
                 map("n", "<Leader>cq", vim.diagnostic.setloclist, bufopts)
             end
-            local capabilities = vim.lsp.protocol.make_client_capabilities()
+            local capabilities = require('cmp_nvim_lsp').default_capabilities()
+            -- local capabilities = vim.lsp.protocol.make_client_capabilities()
             require("mason-lspconfig").setup_handlers {
                 function(server_name)
                     require("lspconfig")[server_name].setup {
@@ -160,53 +211,61 @@ return packer.startup(function(use)
     use "neovim/nvim-lspconfig"
 
     -- Snippet engine
-    use {
-        "L3MON4D3/LuaSnip",
-        event = {
-            "InsertEnter",
-            "CmdlineEnter",
-        },
-        config = function()
-            require("luasnip").setup {
-                history = true,
-                updateevents = "TextChanged,TextChangedI",
-                enable_autosnippets = true,
-            }
-        end,
-    }
+    -- use {
+    --     "L3MON4D3/LuaSnip",
+    --     event = {
+    --         "InsertEnter",
+    --         "CmdlineEnter",
+    --     },
+    --     config = function()
+    --         require("luasnip").setup {
+    --             history = true,
+    --             updateevents = "TextChanged,TextChangedI",
+    --             enable_autosnippets = true,
+    --         }
+    --     end,
+    -- }
 
     -- Completion engine
-    use {
-        {
-            "hrsh7th/nvim-cmp",
-            after = "LuaSnip",
-            requires = "L3MON4D3/LuaSnip",
-            config = function()
-                require("cmp").setup {
-                    sources = {
-                        { name = "nvim_lua" },
-                        { name = "nvim_lsp" },
-                        { name = "luasnip" },
-                        { name = "nvim_lsp_signature_help" },
-                        { name = "path" },
-                        { name = "buffer" },
-                    },
-                }
-            end,
-        },
-        { "saadparwaiz1/cmp_luasnip", after = "nvim-cmp" },
-        { "hrsh7th/cmp-buffer", after = "nvim-cmp" },
-        { "hrsh7th/cmp-nvim-lua", after = "nvim-cmp" },
-        { "hrsh7th/cmp-nvim-lsp", after = "nvim-cmp" },
-        { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
-        { "hrsh7th/cmp-cmdline", after = "nvim-cmp" },
-        { "hrsh7th/cmp-path", after = "nvim-cmp" },
-    }
-
+    -- use {
+    --     {
+    --         "hrsh7th/nvim-cmp",
+    --         after = "LuaSnip",
+    --         requires = "L3MON4D3/LuaSnip",
+    --         config = function()
+    --             local cmp = require 'cmp'
+    --             cmp.setup {
+    --                 mapping = {
+    --                     ['<C-Space'] = cmp.mapping.complete(),
+    --                     ['<CR>'] = cmp.mapping.confirm {
+    --                         behavior = cmp.ConfirmBehavior.Replace,
+    --                         select = false,
+    --                     },
+    --                 },
+    --                 sources = {
+    --                     { name = "nvim_lsp" },
+    --                     -- { name = "nvim_lua" },
+    --                     -- { name = "luasnip" },
+    --                     { name = "nvim_lsp_signature_help" },
+    --                     { name = "path" },
+    --                     { name = "buffer" },
+    --                 },
+    --             }
+    --         end,
+    --     },
+    --     -- { "saadparwaiz1/cmp_luasnip",            after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-buffer",                  after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-nvim-lua",                after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-nvim-lsp",                after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-nvim-lsp-signature-help", after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-cmdline",                 after = "nvim-cmp" },
+    --     { "hrsh7th/cmp-path",                    after = "nvim-cmp" },
+    -- }
     -- LuaLine
     use {
         "nvim-lualine/lualine.nvim",
-        requires = "kyazdani42/nvim-web-devicons",
+        requires = { "nvim-tree/nvim-web-devicons", opt = true },
+        extensions = { "nvim-tree" },
         config = function()
             require("lualine").setup({
                 options = { theme = "auto", globalstatus = true },
